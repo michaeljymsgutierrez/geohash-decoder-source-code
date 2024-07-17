@@ -2,21 +2,42 @@
 	import Geohash from 'latlon-geohash'
 	import { onMount } from 'svelte'
 
-	onMount(() => {
-		const L = window.L
-		const map = L.map('map').setView([14.575311217792175, 121.03494345767221], 50)
-		const marker = L.marker([14.575311217792175, 121.03494345767221]).addTo(map)
-		const geohash = Geohash.encode(14.575311217792175, 121.03494345767221, 6)
+	const defaultLatitude = 14.56349
+	const defaultLongitue = 121.03655
+	const defaultGeoHashString = 'wdw4f70n'
 
-		marker.bindPopup('<b>GEOHASH: sdasd</b><br>I am a popup.').openPopup()
+	onMount(() => {
+    const currentURL = window.location.href
+    const currentOrigin = window.location.origin
+    const extractedString = currentURL.replace(`${currentOrigin}/?string=`, '')
+
+		if (hasStringParam() && extractedString) {
+      const { lat, lon } = Geohash.decode(extractedString)
+      initializeMap(extractedString, lat, lon)
+		} else {
+			initializeMap(defaultGeoHashString, defaultLatitude, defaultLongitue)
+		}
+	})
+
+	function initializeMap(geohash, latitude, longitude) {
+		const L = window.L
+		const map = L.map('map').setView([latitude, longitude], 50)
+		const marker = L.marker([latitude, longitude]).addTo(map)
+
+		marker
+			.bindPopup(
+				`<b>GEOHASH:</b> ${geohash} <br>
+        <b>LATITUDE:</b> ${latitude} <br>
+        <b>LONGITUDE:</b> ${longitude} <br>
+        `
+			)
+			.openPopup()
 
 		L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			maxZoom: 19,
 			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 		}).addTo(map)
-
-		console.log(geohash)
-	})
+	}
 
 	function hasStringParam() {
 		var url = new URL(window.location.href)
